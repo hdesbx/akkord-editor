@@ -88,3 +88,26 @@ textarea {
     flex-direction: column;
   }
 }
+
+/* Monospace für alle Editorkomponenten */
+.editor, .text-line, .inline-display, .chord-line {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  letter-spacing: 0; /* Gleichmäßiger Zeichenabstand */
+}
+
+/* Garantiert exakte Zeichenplatzierung */
+.text-line, .inline-display {
+  white-space: pre; /* Erhält Leerzeichen und Positionen */
+  line-height: 1.5;
+}
+
+.chord-line {
+  color: #d35400;
+  font-weight: bold;
+  min-height: 1.5em; /* Konsistente Zeilenhöhe */
+}
+
+.two-line-display {
+  margin-top: 20px;
+}

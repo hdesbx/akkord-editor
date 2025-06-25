@@ -1,125 +1,128 @@
-// src/App.jsx
-import { useState } from "react";
-import {
-  transposeChordLine,
-  detectChords,
-  mergeChordsIntoLyrics,
-  generateSeparatedChordLyricsPreview,
-} from "./utils";
-import "./App.css";
+import React, { useState, useEffect } from 'react';
+import './App.css';
 
-export default function App() {
-  const [rawInput, setRawInput] = useState("");
-  const [showInlineChords, setShowInlineChords] = useState(false);
-  const [transposeAmount, setTransposeAmount] = useState(0);
-  const [useNbsp, setUseNbsp] = useState(false);
+function App() {
+  const [content, setContent] = useState('');
+  const [inlineMode, setInlineMode] = useState(true);
+  
+  // Initialdaten im richtigen Format laden
+  useEffect(() => {
+    // Beispielsong im Inline-Format
+    setContent("Yo[D]u had me down, but I [A]got up already\n[G]Looking at my watch, I should [D]be there already");
+  }, []);
 
-  const lines = rawInput.split("\n").map((line) =>
-    useNbsp && line.trim() !== ""
-      ? "\u00A0" + line.replace(/^\s+/, "")
-      : line
-  );
-
-  const editorPreview = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const isChordLine = detectChords(line);
-    const nextLine = lines[i + 1] ?? "";
-    const isNextLyric = !detectChords(nextLine);
-
-    if (isChordLine && isNextLyric) {
-      const chordLine = transposeChordLine(line, transposeAmount);
-      const lyricsLine = nextLine;
-      const output = showInlineChords
-        ? mergeChordsIntoLyrics(chordLine, lyricsLine)
-        : (
-            <>
-              <span className="chords">{chordLine}</span>
-              <br />
-              <span>{lyricsLine}</span>
-            </>
-          );
-
-      editorPreview.push(<div key={`pair-${i}`}>{output}</div>);
-      i++; // Skip next line
-    } else if (isChordLine) {
-      const chordLine = transposeChordLine(line, transposeAmount);
-      editorPreview.push(
-        <div key={`chord-${i}`}>
-          <span className="chords">{chordLine}</span>
-        </div>
-      );
+  // Konvertierung zwischen den Modi
+  const toggleDisplayMode = () => {
+    if (inlineMode) {
+      // Inline -> Zweizeilig
+      const lines = content.split('\n');
+      const convertedLines = lines.map(line => {
+        const chordLine = [];
+        const textLine = [];
+        let inChord = false;
+        let chord = '';
+        
+        for (let i = 0; i < line.length; i++) {
+          if (line[i] === '[') {
+            inChord = true;
+            chord = '';
+          } else if (line[i] === ']' && inChord) {
+            inChord = false;
+            chordLine.push(...' '.repeat(textLine.length - chordLine.length), ...chord);
+          } else if (inChord) {
+            chord += line[i];
+          } else {
+            textLine.push(line[i]);
+            if (chordLine.length < textLine.length) {
+              chordLine.push(' ');
+            }
+          }
+        }
+        
+        return [chordLine.join(''), textLine.join('')].join('\n');
+      });
+      
+      setContent(convertedLines.join('\n'));
     } else {
-      editorPreview.push(<div key={`line-${i}`}>{line}</div>);
+      // Zweizeilig -> Inline
+      const lines = content.split('\n');
+      const convertedLines = [];
+      
+      for (let i = 0; i < lines.length; i += 2) {
+        const chordLine = lines[i] || '';
+        const textLine = lines[i + 1] || '';
+        let combined = '';
+        let chordPos = 0;
+        
+        for (let j = 0; j < textLine.length; j++) {
+          const chordChar = chordLine[j] || ' ';
+          
+          if (chordChar !== ' ' && (j === 0 || chordLine[j - 1] === ' ')) {
+            // Neuer Akkord beginnt
+            let chord = '';
+            for (let k = j; k < chordLine.length; k++) {
+              if (chordLine[k] === ' ') break;
+              chord += chordLine[k];
+            }
+            combined += `[${chord}]`;
+          }
+          
+          combined += textLine[j];
+        }
+        
+        convertedLines.push(combined);
+      }
+      
+      setContent(convertedLines.join('\n'));
     }
-  }
+    
+    setInlineMode(!inlineMode);
+  };
 
-  const lyricsPanelPreview = generateSeparatedChordLyricsPreview(
-    lines,
-    transposeAmount
-  );
+  // Textänderungen verarbeiten
+  const handleContentChange = (e) => {
+    setContent(e.target.value);
+  };
 
   return (
-    <div className="app">
-      <h1>🎸 LRC Akkord Editor</h1>
-
+    <div className="App">
+      <h1>Akkord-Editor</h1>
+      
       <div className="controls">
         <label>
-          <input
+          <input 
             type="checkbox"
-            checked={showInlineChords}
-            onChange={(e) => setShowInlineChords(e.target.checked)}
+            checked={inlineMode}
+            onChange={toggleDisplayMode}
           />
-          Akkorde inline anzeigen (im Editor)
+          Akkorde inline anzeigen
         </label>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={useNbsp}
-            onChange={(e) => setUseNbsp(e.target.checked)}
-          />
-          NBSP am Zeilenanfang
-        </label>
-
-        <label>
-          Transponieren:
-          <select
-            value={transposeAmount}
-            onChange={(e) => setTransposeAmount(parseInt(e.target.value))}
-          >
-            {Array.from({ length: 13 }, (_, i) => i - 6).map((v) => (
-              <option key={v} value={v}>
-                {v > 0 ? "+" + v : v}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(lyricsPanelPreview);
-            alert("🎵 Lyrics Panel Format kopiert!");
-          }}
-        >
-          🎵 Kopieren für Lyrics Panel
-        </button>
       </div>
 
-      <h2>Editor</h2>
       <textarea
-        rows="15"
-        value={rawInput}
-        onChange={(e) => setRawInput(e.target.value)}
-        placeholder="Füge hier deinen LRC-Text ein..."
+        value={content}
+        onChange={handleContentChange}
+        className="editor"
+        placeholder="Songtext eingeben..."
+        rows={10}
+        spellCheck={false}
       />
-
-      <h2>Vorschau</h2>
-      <div className="output">{editorPreview}</div>
-
-      <h2>Lyrics Panel Format</h2>
-      <pre className="lyrics-preview">{lyricsPanelPreview}</pre>
+      
+      <div className="hint">
+        {inlineMode ? (
+          <p>
+            <strong>Inline-Modus:</strong> Akkorde in eckigen Klammern eingeben, z.B.: "You [D]had me down"<br />
+            Umbruch erfolgt automatisch am Zeilenende
+          </p>
+        ) : (
+          <p>
+            <strong>Zweizeilen-Modus:</strong> Erste Zeile = Akkorde, Zweite Zeile = Text<br />
+            Positionierung mit Leerzeichen, z.B.: "   D        G7"
+          </p>
+        )}
+      </div>
     </div>
   );
 }
+
+export default App;
