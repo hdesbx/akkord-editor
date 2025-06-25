@@ -1,0 +1,90 @@
+textarea {
+  width: 100%;
+  font-family: monospace;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chords {
+  color: #00aaff;
+  font-weight: bold;
+  white-space: pre;
+  margin-bottom: 0.2em;
+}
+
+.chord-inline {
+  color: #00aaff;
+  font-weight: bold;
+  margin-right: 2px;
+}
+
+.output {
+  margin-top: 1em;
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+/* Allgemeine Layout-Verbesserung */
+* {
+  box-sizing: border-box;
+}
+
+/* Textarea-Grundstil */
+textarea {
+  width: 100%;
+  font-family: monospace;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  resize: vertical; /* Nutzer darf Höhe ändern, aber nicht die Breite */
+  min-height: 100px;
+}
+
+/* Flexbox für Steuerelemente */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Akkordzeilen */
+.chords {
+  color: #00aaff;
+  font-weight: bold;
+  white-space: pre;
+  margin-bottom: 0.2em;
+}
+
+/* Akkorde inline (z. B. über dem Text) */
+.chord-inline {
+  color: #00aaff;
+  font-weight: bold;
+  margin-right: 2px;
+}
+
+/* Ausgabecontainer mit besserem Look */
+.output {
+  margin-top: 1em;
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: monospace;
+  overflow-x: auto;
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Media Query für noch bessere Mobilnutzung */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+  }
+}
