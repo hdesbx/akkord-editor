@@ -3,9 +3,7 @@ import './App.css';
 
 // Hilfsfunktionen für Zeitstempel
 const isTimestamp = (str) => {
-  //str = str.trim();
-  console.log("Test-Vorlage", str)
-  console.log("Zeitstempel-Test: ",/^\[\d{2}:\d{2}\.\d{2}\]$/.test(str))
+
   return /^\[\d{2}:\d{2}\.\d{2}\]$/.test(str);
   
   }
@@ -36,15 +34,20 @@ function App() {
     "[00:18.30]    E       A\n" +
     "[00:18.30]Sonnenschein"
   );
-   const nbsp = "-"   // geschütztes Leerzeichen  //"\u00A0";
 
   const [inlineMode, setInlineMode] = useState(false);
   const [transposeAmount, setTransposeAmount] = useState(0);
-  content.forEach((line, index) => {
-    
-  })
-const preparedContent = content.replace(/\]/g, "]" + "-"); // geschützte Leerzeichen vor jede Zeile
-console.log(content)
+ 
+
+//const preparedContent = content.replace(/(^|\n)(?!\u00A0)/g, "$1" + nbsp); // geschützte Leerzeichen vor jede Zeile
+
+//const preparedContent = content.replace(/(\])((?!"-"))/g, "]-"); // geschützte Leerzeichen vor jede Zeile
+//console.log("contentLines:---------------------")
+//for (const contentLine of content) {
+//    console.log(contentLine)
+//}
+
+const preparedContent = content
   const handleContentChange = (e) => {
     setContent(e.target.value);
   };
@@ -70,8 +73,9 @@ console.log(content)
 
 const toggleDisplayMode = () => {
   if (inlineMode) {
+
     // Inline -> Zweizeilig
-    
+
     const lines = preparedContent.split("\n");
     const converted = [];
 
@@ -87,10 +91,11 @@ const toggleDisplayMode = () => {
 
         // Zeitstempel direkt übernehmen
         if (char === "[" && isTimestamp(line.substring(i, i + 10))) {
-          const ts = line.substring(i, i + 11);
+          const ts = line.substring(i, i + 10);
           chordLine += ts;
           textLine += ts;
-          i += 11;
+
+          i += 10;
           continue;
         }
 
@@ -139,25 +144,12 @@ const toggleDisplayMode = () => {
         i++;
       }
 
-      // Nachträgliches Entfernen eines fälschlich übernommenen Zeichens direkt nach dem Zeitstempel
-      const tsMatch = chordLine.match(/^\[\d{2}:\d{2}\.\d{2}\]/);
-      if (tsMatch) {
-        const tsLen = tsMatch[0].length;
-        if (chordLine.length > tsLen && textLine.length > tsLen) {
-          const charAfterTS = chordLine[tsLen];
-          const sameInText = textLine[tsLen];
-          if (charAfterTS === sameInText) {
-            chordLine = chordLine.slice(0, tsLen) + " " + chordLine.slice(tsLen + 1);
-          }
-        }
-      }
+
 
       while (chordLine.length < textLine.length) {
         chordLine += " ";
       }
 
-      console.log("DEBUG Inline -> Zweizeilig:", chordLine);
-      console.log("DEBUG Inline -> Zweizeilig:", textLine);
 
       converted.push(chordLine, textLine);
     }
@@ -173,16 +165,19 @@ const toggleDisplayMode = () => {
       const textLine = lines[i + 1] || "";
       let result = "";
       let t = 0;
-
+//console.log(chordLine)
+//console.log(textLine)
+      //Maximale Länge aus Akkord- und Textzeile ermitteln und die kürzere der beiden mit Leerzeichen auffüllen.
       const maxLength = Math.max(chordLine.length, textLine.length);
       const paddedChordLine = chordLine.padEnd(maxLength, " ");
       const paddedTextLine = textLine.padEnd(maxLength, " ");
 
       while (t < maxLength) {
-        // Zeitstempel erkennen (11 Zeichen)
+        // Zeitstempel erkennen (10 Zeichen)
         if (paddedTextLine[t] === "[" && isTimestamp(paddedTextLine.substring(t, t + 10))) {
-          result += paddedTextLine.substring(t, t + 11);
-          t += 11;
+          result += paddedTextLine.substring(t, t + 10);
+
+          t += 10;
           continue;
         }
 
@@ -198,6 +193,7 @@ const toggleDisplayMode = () => {
             chord += paddedChordLine[k];
             k++;
           }
+
           if (chord) {
             result += `(${chord})`;
 
@@ -218,7 +214,7 @@ const toggleDisplayMode = () => {
         t++;
       }
 
-      console.log("DEBUG Zweizeilig -> Inline:", result);
+      //console.log("DEBUG Zweizeilig -> Inline:", result);
 
       converted.push(result.trimEnd());
     }
