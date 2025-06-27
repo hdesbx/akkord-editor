@@ -37,17 +37,9 @@ function App() {
 
   const [inlineMode, setInlineMode] = useState(false);
   const [transposeAmount, setTransposeAmount] = useState(0);
- 
+  const [protectSpaces, setProtectSpaces] = useState(false);
 
-//const preparedContent = content.replace(/(^|\n)(?!\u00A0)/g, "$1" + nbsp); // geschützte Leerzeichen vor jede Zeile
-
-//const preparedContent = content.replace(/(\])((?!"-"))/g, "]-"); // geschützte Leerzeichen vor jede Zeile
-//console.log("contentLines:---------------------")
-//for (const contentLine of content) {
-//    console.log(contentLine)
-//}
-
-const preparedContent = content
+  const preparedContent = content
   const handleContentChange = (e) => {
     setContent(e.target.value);
   };
@@ -144,12 +136,9 @@ const toggleDisplayMode = () => {
         i++;
       }
 
-
-
       while (chordLine.length < textLine.length) {
         chordLine += " ";
       }
-
 
       converted.push(chordLine, textLine);
     }
@@ -165,8 +154,7 @@ const toggleDisplayMode = () => {
       const textLine = lines[i + 1] || "";
       let result = "";
       let t = 0;
-//console.log(chordLine)
-//console.log(textLine)
+
       //Maximale Länge aus Akkord- und Textzeile ermitteln und die kürzere der beiden mit Leerzeichen auffüllen.
       const maxLength = Math.max(chordLine.length, textLine.length);
       const paddedChordLine = chordLine.padEnd(maxLength, " ");
@@ -214,8 +202,6 @@ const toggleDisplayMode = () => {
         t++;
       }
 
-      //console.log("DEBUG Zweizeilig -> Inline:", result);
-
       converted.push(result.trimEnd());
     }
 
@@ -224,6 +210,29 @@ const toggleDisplayMode = () => {
 
   setInlineMode(!inlineMode);
 };
+
+const toggleProtectedSpaces = () => {
+  const updatedLines = content.split("\n").map((line) => {
+    return line.replace(/\[(\d{2}:\d{2}\.\d{2})\](\u00a0)?/g, (match, ts, space) => {
+      return protectSpaces
+        ? `[${ts}]`               // geschütztes Leerzeichen entfernen
+        : `[${ts}]\u00a0`;        // geschütztes Leerzeichen hinzufügen
+    });
+  });
+
+  setContent(updatedLines.join("\n"));
+  setProtectSpaces(!protectSpaces);
+};
+
+function renderPreview(text) {
+  const lines = text.split('\n');
+
+  return lines.map((line, i) => {
+    const highlighted = line.replace(/\u00a0/g, '<span class="nbsp">␣</span>');
+    return `<div key=${i}>${highlighted}</div>`;
+  }).join('');
+}
+
 
   return (
     <div className="App">
@@ -257,6 +266,14 @@ const toggleDisplayMode = () => {
             ))}
           </select>
         </div>
+        <label>
+          <input
+            type="checkbox"
+            checked={protectSpaces}
+            onChange={toggleProtectedSpaces}
+          />
+          Geschütztes Leerzeichen nach Zeitstempel
+        </label>
       </div>
 
       <div className="editor-container">
@@ -283,7 +300,13 @@ const toggleDisplayMode = () => {
           </p>
         )}
       </div>
+
+      <div className="preview" dangerouslySetInnerHTML={{ __html: renderPreview(content) }} />
+
     </div>
+
+
+
   );
 }
 
