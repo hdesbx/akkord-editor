@@ -139,7 +139,8 @@ const toggleDisplayMode = () => {
       while (chordLine.length < textLine.length) {
         chordLine += " ";
       }
-
+console.log("chordLine: ", chordLine)
+console.log("textLine: ", textLine)
       converted.push(chordLine, textLine);
     }
 
@@ -181,7 +182,8 @@ const toggleDisplayMode = () => {
             chord += paddedChordLine[k];
             k++;
           }
-
+console.log("paddedChordLine: ", paddedChordLine)
+console.log("paddedTextLine: ", paddedTextLine)
           if (chord) {
             result += `(${chord})`;
 
