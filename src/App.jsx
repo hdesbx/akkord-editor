@@ -46,8 +46,8 @@ function App() {
 
   const transposeChords = (amount) => {
     if (inlineMode) {
-      const transposedContent = content.replace(/§([^§]*)§/g, (match, chord) => {
-        return `§${transposeChord(chord, amount)}§`;
+      const transposedContent = content.replace(/\(([^(]*)\)/g, (match, chord) => {
+        return `(${transposeChord(chord, amount)})`;
       });
       setContent(transposedContent);
     } else {
@@ -73,6 +73,7 @@ const toggleDisplayMode = () => {
 
     for (const line of lines) {
       let chordLine = "";
+      let textAusChordline = "";
       let textLine = "";
       let inChord = false;
       let chordBuffer = "";
@@ -80,12 +81,13 @@ const toggleDisplayMode = () => {
 
       while (i < line.length) {
         const char = line[i];
-
+ 
         // Zeitstempel direkt übernehmen
         if (char === "[" && isTimestamp(line.substring(i, i + 10))) {
           const ts = line.substring(i, i + 10);
           chordLine += ts;
           textLine += ts;
+          textAusChordline += ts;  //falls keine Akkordzeile
 
           i += 10;
           continue;
@@ -97,7 +99,7 @@ const toggleDisplayMode = () => {
           i++;
           continue;
         }
-
+ 
         if (char === ")") {
           inChord = false;
           chordLine += chordBuffer;
@@ -132,16 +134,31 @@ const toggleDisplayMode = () => {
           chordLine += " ";
           textLine += char;
         }
-
+        textAusChordline += line[i]
         i++;
       }
 
-      while (chordLine.length < textLine.length) {
-        chordLine += " ";
+      console.log("chordLine xxx: ", chordLine)     //---------------------
+
+      if (isLikelyChordLine(chordLine)) {
+        console.log("Akkord-Zeile erkannt wegen Funktion");
+        while (chordLine.length < textLine.length) {
+          chordLine += " ";
+        }  
+        converted.push(chordLine, textLine);        
+      } else {
+        console.log("keine Akkordzeile -> wird als Text behandelt") // ----------------------------- 
+        console.log("falsche Akkordzeile: ", textAusChordline)      // ----------------------------- 
+        converted.push(textAusChordline);
+        //break
       }
-console.log("chordLine: ", chordLine)
+
+
+
 console.log("textLine: ", textLine)
-      converted.push(chordLine, textLine);
+
+      console.log("converted")
+      console.log(converted)
     }
 
     setContent(converted.join("\n"));
@@ -149,61 +166,85 @@ console.log("textLine: ", textLine)
     // Zweizeilig -> Inline
     const lines = content.split("\n");
     const converted = [];
+    console.log("Zeilenlänge: ", lines.length)
 
-    for (let i = 0; i < lines.length; i += 2) {
+
+    for (let i = 0; i < lines.length; i++) {
       const chordLine = lines[i] || "";
       const textLine = lines[i + 1] || "";
+      let isPaar = false  // liegt eine Akkord-Textzeilen-Paar vor?
       let result = "";
       let t = 0;
 
-      //Maximale Länge aus Akkord- und Textzeile ermitteln und die kürzere der beiden mit Leerzeichen auffüllen.
-      const maxLength = Math.max(chordLine.length, textLine.length);
-      const paddedChordLine = chordLine.padEnd(maxLength, " ");
-      const paddedTextLine = textLine.padEnd(maxLength, " ");
+      console.log("chordLine: ", chordLine,  "Index: ", i)
+      console.log("textLine: ", textLine,  "Index: ", i)
 
-      while (t < maxLength) {
-        // Zeitstempel erkennen (10 Zeichen)
-        if (paddedTextLine[t] === "[" && isTimestamp(paddedTextLine.substring(t, t + 10))) {
-          result += paddedTextLine.substring(t, t + 10);
+      // Prüfe, ob hier ein Akkord/Text-Zeilen-Paar vorliegt.
+      
+      if (isLikelyChordLine(lines[i]) && !isLikelyChordLine(lines[i+1])) {
+        isPaar = true
+        console.log("Index: ", i)
+        i++ // i um 1 nach vorne schieben, damit die übernächste Zeile behandelt wird. i+1 war ja schon dran
+        console.log("Akkord-Textzeilen-Paar erkannt", "neuer Index", i);
+      } else {
+        //Ansonsten muss der Index angepasst werden, weil das Standard-Inkrement 2 ist.
+        console.log("Kein korretes Akkord-Textzeilen-Paar erkannt");
+        result += lines[i]
+        console.log("result: ",result, "Index: ", i)
+        isPaar = false
+      }
+      if (isPaar){
+        //Maximale Länge aus Akkord- und Textzeile ermitteln und die kürzere der beiden mit Leerzeichen auffüllen.
+        const maxLength = Math.max(chordLine.length, textLine.length);
 
-          t += 10;
-          continue;
-        }
+        const paddedChordLine = chordLine.padEnd(maxLength, " ");
+        const paddedTextLine = textLine.padEnd(maxLength, " ");
 
-        // Akkord an aktueller Position?
-        if (paddedChordLine[t] !== " " && paddedChordLine[t] !== undefined) {
-          let chord = "";
-          let k = t;
-          while (
-            k < paddedChordLine.length &&
-            paddedChordLine[k] !== " " &&
-            paddedChordLine[k] !== "["
-          ) {
-            chord += paddedChordLine[k];
-            k++;
-          }
-console.log("paddedChordLine: ", paddedChordLine)
-console.log("paddedTextLine: ", paddedTextLine)
-          if (chord) {
-            result += `(${chord})`;
+        while (t < maxLength) {
+          // Zeitstempel erkennen (10 Zeichen)
+          if (paddedTextLine[t] === "[" && isTimestamp(paddedTextLine.substring(t, t + 10))) {
+            result += paddedTextLine.substring(t, t + 10);
 
-            // Erstes nicht-leeres Zeichen direkt unter dem Akkord anhängen
-            for (let j = t; j < k; j++) {
-              if (paddedTextLine[j] !== " ") {
-                result += paddedTextLine[j];
-                break; // Nur das erste Zeichen anhängen
-              }
-            }
-            t = k;
+            t += 10;
             continue;
           }
-        }
 
-        // Normales Textzeichen übernehmen
-        result += paddedTextLine[t];
-        t++;
+          // Akkord an aktueller Position?
+          if (paddedChordLine[t] !== " " && paddedChordLine[t] !== undefined) {
+            let chord = "";
+            let k = t;
+            while (
+              k < paddedChordLine.length &&
+              paddedChordLine[k] !== " " &&
+              paddedChordLine[k] !== "["
+            ) {
+              chord += paddedChordLine[k];
+              k++;
+            }
+
+            if (chord) {
+              result += `(${chord})`;
+
+              // Erstes nicht-leeres Zeichen direkt unter dem Akkord anhängen
+              for (let j = t; j < k; j++) {
+                if (paddedTextLine[j] !== " ") {
+                  result += paddedTextLine[j];
+                  break; // Nur das erste Zeichen anhängen
+                }
+              }
+              t = k;
+              continue;
+            }
+          }
+
+          // Normales Textzeichen übernehmen
+          result += paddedTextLine[t];
+          t++;
+        }
       }
 
+console.log("Resultat vor push")
+console.log(result)
       converted.push(result.trimEnd());
     }
 
@@ -235,6 +276,24 @@ function renderPreview(text) {
   }).join('');
 }
 
+// Prüft, ob es sich um eine Akkordzeile handelt
+function isLikelyChordLine(line) {
+  if (typeof line === 'undefined') {
+    line = ""
+  console.log('line ist undefined');
+}
+  console.log(line)
+  // Zeitstempel entfernen, falls vorhanden
+  const content = line.replace(/^\[\d{2}:\d{2}\.\d{2}\]/, '').trim();
+  if (!content) return false;
+
+  const tokens = content.split(/\s+/);
+  const chordRegex = /^[A-G](#|b)?(m|maj7|m7|7|sus4|dim|aug|add\d*)?$/;
+
+  const chordCount = tokens.filter(token => chordRegex.test(token)).length;
+
+  return chordCount >= 1 && chordCount / tokens.length > 0.5;
+}
 
   return (
     <div className="App">
