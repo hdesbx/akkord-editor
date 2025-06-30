@@ -176,8 +176,8 @@ console.log("textLine: ", textLine)
       let result = "";
       let t = 0;
 
-      console.log("chordLine: ", chordLine,  "Index: ", i)
-      console.log("textLine: ", textLine,  "Index: ", i)
+      //console.log("chordLine: ", chordLine,  "Index: ", i)
+      //console.log("textLine: ", textLine,  "Index: ", i)
 
       // Prüfe, ob hier ein Akkord/Text-Zeilen-Paar vorliegt.
       
@@ -241,6 +241,14 @@ console.log("textLine: ", textLine)
           result += paddedTextLine[t];
           t++;
         }
+      } else {
+        console.log("vor ChordLine")
+        if(isLikelyChordLine(lines[i])){
+          console.log("einsame Zeile ist eine: Chod-Line")
+        } else {
+          console.log("einsame Zeile ist eine: Text-Line")
+        }
+
       }
 
 console.log("Resultat vor push")
