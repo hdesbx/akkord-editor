@@ -168,31 +168,43 @@ console.log("textLine: ", textLine)
     const converted = [];
     console.log("Zeilenlänge: ", lines.length)
 
+    let chordLine = ""
+    let textLine = ""
+    let isPaar = false  // liegt eine Akkord-Textzeilen-Paar vor? 
+    let isChordLine = false
+    let isNextChordLine = false
 
     for (let i = 0; i < lines.length; i++) {
-      const chordLine = lines[i] || "";
-      const textLine = lines[i + 1] || "";
-      let isPaar = false  // liegt eine Akkord-Textzeilen-Paar vor?
+
       let result = "";
       let t = 0;
 
-      //console.log("chordLine: ", chordLine,  "Index: ", i)
-      //console.log("textLine: ", textLine,  "Index: ", i)
+        isChordLine = isLikelyChordLine(lines[i])
+        isNextChordLine = isLikelyChordLine(lines[i+1])
+  
+        if((isTimestamp(lines[i]) && length.line[i] == 10) ||(!isTimestamp(lines[i]) && length.line[i] == 0)){
+                console.log("Resultat Leerzeile")
+                console.log(result)
+                converted.push(result.trimEnd());
+                continue
+        }
 
-      // Prüfe, ob hier ein Akkord/Text-Zeilen-Paar vorliegt.
-      
-      if (isLikelyChordLine(lines[i]) && !isLikelyChordLine(lines[i+1])) {
-        isPaar = true
-        console.log("Index: ", i)
-        i++ // i um 1 nach vorne schieben, damit die übernächste Zeile behandelt wird. i+1 war ja schon dran
-        console.log("Akkord-Textzeilen-Paar erkannt", "neuer Index", i);
-      } else {
-        //Ansonsten muss der Index angepasst werden, weil das Standard-Inkrement 2 ist.
-        console.log("Kein korretes Akkord-Textzeilen-Paar erkannt");
-        result += lines[i]
-        console.log("result: ",result, "Index: ", i)
-        isPaar = false
-      }
+
+        if (isChordLine && !isNextChordLine)  {
+          isPaar = true
+          chordLine = lines[i]  || ""
+          textLine = lines[i+1]  || ""
+          console.log(("Indes: ", i))
+          i++ // i um 1 nach vorne schieben, damit die übernächste Zeile behandelt wird. i+1 war ja schon dran
+          console.log("Akkord-Textzeilen-Paar erkannt", isPaar, "neuer Index", i);
+        } else {
+          isPaar = false
+          //Ansonsten muss der Index angepasst werden, weil das Standard-Inkrement 2 ist.
+          console.log("Kein korretes Akkord-Textzeilen-Paar erkannt", "result: ",result, "Index: ", i);
+          result += lines[i]
+        }
+        
+
       if (isPaar){
         //Maximale Länge aus Akkord- und Textzeile ermitteln und die kürzere der beiden mit Leerzeichen auffüllen.
         const maxLength = Math.max(chordLine.length, textLine.length);
@@ -251,8 +263,8 @@ console.log("textLine: ", textLine)
 
       }
 
-console.log("Resultat vor push")
-console.log(result)
+      console.log("Resultat vor push")
+      console.log(result)
       converted.push(result.trimEnd());
     }
 
