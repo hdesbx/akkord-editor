@@ -56,15 +56,14 @@ function App() {
         let inChord = false;   // gibt an, ob Inline (true) oder 2-zeilig (false)
         let chordBuffer = "";
         let akkordLaenge = 0;
-        let keineLeerzeichen = 1
-        let kl = 1
         let i = 0;
 
-        //Alle Zeichen einer Zeile durchgehen zur Prüfung des Zeilen-Modus
+        //Alle Zeichen einer Zeile durchgehen zum Aufteilen in Akkord-Zeile und Text-Zeile
         while (i < line.length) {
+
           const char = line[i];
   
-          // Zeitstempel direkt übernehmen
+          // Wenn es einen Zeitstempel gibt, diesen direkt übernehmen und i anpassen
           if (char === "[" && isTimestamp(line.substring(i, i + 10))) {
             const ts = line.substring(i, i + 10);  // Zeitstempel an ts zuweisen.
             chordLine += ts;   // Aufbau der Akkordlinie
@@ -78,11 +77,11 @@ function App() {
           if (char === "(") {   //Wenn in einer Zeile das Zeichen Akkordstart "(" gefunden wird,
             inChord = true;     // wird die Akkordebehandlung auf true.
             chordBuffer = "";   // dient als Akkordpuffer, nimmt also die gesamte Akkordbezeichnung auf, z. B. Amaj7
-            keineLeerzeichen = 1
             i++;
             continue;
           }
   
+
           if (char === ")") {           //Wenn in einer Zeile das Zeichen Akkordende ")" gefunden wird.
             inChord = false;            // wird inChord auf false gesetzt und damit die Akkordbehandlung beendet.
             chordLine += chordBuffer;   // Akkord (Puffer) in die Akkordzeile einfügen.
@@ -90,21 +89,23 @@ function App() {
 
             let lookahead = i + 1;      // Was kommt als nächstes Zeichen?
             let attached = false;
-console.log("*****akkordLaenge: ", akkordLaenge)
-            while (lookahead < line.length && line[lookahead] === " ") lookahead++; // lookahead auf nächstes Nicht-Leerzeichen schieben.
-            
+//console.log("lookahead davor: ", lookahead)
+//            while (lookahead < line.length && line[lookahead] === " ") lookahead++; // lookahead auf nächstes Nicht-Leerzeichen schieben.
+//console.log("lookahead danach: ", lookahead)            
             if (
               lookahead < line.length &&
               line[lookahead] !== "(" &&
               line[lookahead] !== "[" &&
               line[lookahead] !== "]"
             ) {
+
               textLine += line[lookahead];  //textLine erweitern mit dem Akkord
-              i = lookahead;  // i vorschieben zur aktuellen Teststellen
+              
+                i = lookahead;  // i vorschieben zur aktuellen Teststellen
               attached = true;
             }
 
-            if (!attached) {    // Wenn 
+            if (!attached) {    // Wenn in die Textzeile nichts mehr angehängt wird, fülle mit Leerzeichen auf
               textLine += " ".repeat(chordBuffer.length);
             }
 
@@ -118,21 +119,24 @@ console.log("*****akkordLaenge: ", akkordLaenge)
           if (inChord) {          // Wenn die Akkord-Behandlung läuft
             chordBuffer += char;  // wird der der Puffer um die Akkordzeichens des Akkordes erweitert.
             console.log("********chordBuffer", chordBuffer, " ", chordBuffer.length)
-            kl++
-            keineLeerzeichen++            
+         
           } else {
-            console.log("Bedingung für Leerzeichen: ", chordBuffer.length, keineLeerzeichen, akkordLaenge)
-            if(chordBuffer.length == 0 || (chordBuffer.length > 0 && keineLeerzeichen == akkordLaenge)){
-              chordLine += " "
-            }
 
+            console.log("Akkordlänge in else: ", akkordLaenge)
+            
+            if(akkordLaenge <= 1) {
+              chordLine += "." 
+              console.log(chordLine)
+              akkordLaenge--      
+            }
 
             textLine += char;
             console.log("chordLine", chordLine)
-            kl = 0
+
           }
+
           
-          textAusChordline += line[i]
+          //textAusChordline += line[i]
           //console.log("textAusChordline: ", textAusChordline)
           i++;
         }
