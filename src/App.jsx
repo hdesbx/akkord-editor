@@ -41,7 +41,7 @@ function App() {
 
   //Herzfunktion zum Darstellen der Lyrics
   const toggleDisplayMode = () => {
-    if (inlineMode) {   // Wenn der Inline-Modus eingeschaltet ist
+    if (inlineMode) {   // Wenn der Inline-Modus eingeschaltet ist also Inline -> 2-zeilig
       console.log("Inline-Modus")
       // schaltet: Inline -> Zweizeilig
 
@@ -57,6 +57,12 @@ function App() {
         let chordBuffer = "";
         let akkordLaenge = 0;
         let i = 0;
+
+//prüfen, ob eine Akkordzeile vorliegt über das Akkordzeichen "("
+        if(!line.includes("(")) {
+          converted.push(line);    // Diese Zeile als Textzeile zuweisen, ohne Akkorde
+          continue; // Durchlauf abbrechen und neu starten
+        }
 
         //Alle Zeichen einer Zeile durchgehen zum Aufteilen in Akkord-Zeile und Text-Zeile
         while (i < line.length) {
@@ -89,9 +95,11 @@ function App() {
 
             let lookahead = i + 1;      // Was kommt als nächstes Zeichen?
             let attached = false;
-//console.log("lookahead davor: ", lookahead)
-//            while (lookahead < line.length && line[lookahead] === " ") lookahead++; // lookahead auf nächstes Nicht-Leerzeichen schieben.
-//console.log("lookahead danach: ", lookahead)            
+            
+            //console.log("lookahead davor: ", lookahead)
+            while (lookahead < line.length && line[lookahead] === " ") lookahead++; // lookahead auf nächstes Nicht-Leerzeichen schieben.
+            //console.log("lookahead danach: ", lookahead)            
+            
             if (
               lookahead < line.length &&
               line[lookahead] !== "(" &&
@@ -109,7 +117,7 @@ function App() {
               textLine += " ".repeat(chordBuffer.length);
             }
 
-            console.log("chordBuffer-Länge: ", chordBuffer.length)
+            //console.log("chordBuffer-Länge: ", chordBuffer.length)
             chordBuffer = ""; // Akkordpuffer zurücksetzen
             i++;
             continue;
@@ -118,20 +126,22 @@ function App() {
 
           if (inChord) {          // Wenn die Akkord-Behandlung läuft
             chordBuffer += char;  // wird der der Puffer um die Akkordzeichens des Akkordes erweitert.
-            console.log("********chordBuffer", chordBuffer, " ", chordBuffer.length)
+            //console.log("********chordBuffer", chordBuffer, " ", chordBuffer.length)
          
           } else {
 
             console.log("Akkordlänge in else: ", akkordLaenge)
             
-            if(akkordLaenge <= 1) {
-              chordLine += "." 
-              console.log(chordLine)
-              akkordLaenge--      
+            if(akkordLaenge > 1) {  // Wenn die Akkordbezeichnung mehr als ein Zeichen ist ....
+               akkordLaenge--       // um 1 reduzieren, bis eine Akkordlänge von 1 erreicht ist. 
+            } else {     
+              chordLine += " "      // erst dann mit Leerzeichen auffüllen, das sich ansonsten die Akkorde gegenüber der Testzeile nach hinten verschieben.
+              //console.log(chordLine)
+             
             }
 
             textLine += char;
-            console.log("chordLine", chordLine)
+            //console.log("chordLine", chordLine)
 
           }
 
@@ -154,7 +164,7 @@ function App() {
           //break
         }
 
-        console.log("textLine: ", textLine)
+        //console.log("textLine: ", textLine)
 
         console.log("converted")
         console.log(converted)
@@ -175,7 +185,7 @@ function App() {
         const chordLine = lines[i] || "";
         const textLine = lines[i + 1] || "x";
 
-        console.log("TextLine: ", textLine)
+        //console.log("TextLine: ", textLine)
 
         let isPaar = false  // liegt eine Akkord-Textzeilen-Paar vor?
         let result = "";
@@ -188,9 +198,9 @@ function App() {
         
         if (isLikelyChordLine(lines[i]) && !isLikelyChordLine(lines[i+1]) && textLine != "x") {
           isPaar = true
-          console.log("Index: ", i)
+          //console.log("Index: ", i)
           i++ // i um 1 nach vorne schieben, damit die übernächste Zeile behandelt wird. i+1 war ja schon dran
-          console.log("Akkord-Textzeilen-Paar erkannt", "neuer Index", i);
+          //console.log("Akkord-Textzeilen-Paar erkannt", "neuer Index", i);
         } else {
           console.log("Kein korretes Akkord-Textzeilen-Paar erkannt");
           result += lines[i]
@@ -204,7 +214,6 @@ function App() {
           const paddedChordLine = chordLine.padEnd(maxLength, " ");
           const paddedTextLine = textLine.padEnd(maxLength, " ");
 
-  //console.log("maxLength: ", maxLength)
 
           while (t < maxLength) {
             // Zeitstempel erkennen (10 Zeichen)
@@ -257,7 +266,7 @@ function App() {
 
         }
 
-        console.log("Resultat vor push")
+       // console.log("Resultat vor push")
         console.log(result)
         converted.push(result.trimEnd());
       }
@@ -298,7 +307,7 @@ function App() {
       line = ""
       console.log('line ist undefined');
     }
-    console.log(line)
+    //console.log(line)
     // Zeitstempel entfernen, falls vorhanden
     const content = line.replace(/^\[\d{2}:\d{2}\.\d{2}\]/, '').trim();
     if (!content) return false;
