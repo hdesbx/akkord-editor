@@ -314,7 +314,7 @@ function App() {
 
     const tokens = content.split(/\s+/);
     //const chordRegex = /^[A-G](#|b)?(m|maj7|m7|7|sus4|dim|aug|add\d*)?$/;
-    const chordRegex = /^[A-G](#|b)?(m|maj7|m7|7|sus4|dim|aug|add\d*)?(\/[A-G](#|b)?)?$/;
+    const chordRegex = /^[A-G](#|b)?(m|maj7|m7|7|5|sus4|dim|aug|add\d*)?(\/[A-G](#|b)?)?$/;
 
     const chordCount = tokens.filter(token => chordRegex.test(token)).length;
 
