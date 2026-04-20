@@ -37,8 +37,9 @@ export function detectChords(line) {
   const cleaned = line.trimEnd();
   if (cleaned.endsWith("~")) return true;
 
-  const chordRegex = /\b([A-G](#|b)?(m|maj7|sus4|dim|aug|7|6|9)?(\/[A-G](#|b)?)?)\b/g;
+  const chordRegex = /\b([A-G](#|b)[NC]?(m|maj7|sus4|dim|aug|7|6|9)?(\/[A-G](#|b)?)?)\b/g;
   const matches = line.match(chordRegex);
+  console.log("matches: ", matches )
   return matches && matches.length > 0;
 }
 
@@ -95,7 +96,7 @@ export function generateSeparatedChordLyricsPreview(lines, transposeSteps = 0) {
 
   const isChordLine = (line) => {
     const content = line.replace(timePattern, '').trim();
-    return /^[A-G][b#]?(m|maj7|m7|sus\d*|dim|aug|add\d*)?([\/][A-G][b#]?)?(\s+[A-G][b#]?(m|maj7|m7|sus\d*|dim|aug|add\d*)?([\/][A-G][b#]?)?)*$/.test(content);
+    return /^[A-G][b#][NC]?(m|maj7|m7|sus\d*|dim|aug|add\d*)?([\/][A-G][b#]?)?(\s+[A-G][b#]?(m|maj7|m7|sus\d*|dim|aug|add\d*)?([\/][A-G][b#]?)?)*$/.test(content);
   };
 
   const transposeChord = (chord, steps) => {
