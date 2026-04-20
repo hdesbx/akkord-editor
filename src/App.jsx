@@ -197,6 +197,29 @@ function App() {
       .join("");
   }
 
+<<<<<<< HEAD
+=======
+  // Prüft, ob es sich um eine Akkordzeile handelt
+  function isLikelyChordLine(line) {
+    if (typeof line === 'undefined') {
+      line = ""
+      console.log('line ist undefined');
+    }
+    //console.log(line)
+    // Zeitstempel entfernen, falls vorhanden
+    const content = line.replace(/^\[\d{2}:\d{2}\.\d{2}\]/, '').trim();
+    if (!content) return false;
+
+    const tokens = content.split(/\s+/);
+    //const chordRegex = /^[A-G](#|b)?(m|maj7|m7|7|sus4|dim|aug|add\d*)?$/;
+    const chordRegex = /^[A-G](#|b)?(m|maj7|m7|9|7|5|sus4|dim|aug|add\d*)?(\/[A-G](#|b)?)?$/;
+
+    const chordCount = tokens.filter(token => chordRegex.test(token)).length;
+
+    return chordCount >= 1 && chordCount / tokens.length > 0.5;
+  }
+  // Rückgabe des HTML-Codes
+>>>>>>> 80779ff778fd07e5c9c65d5e5b5ce972029069c0
   return (
     <div className="App">
       <h1>Akkord-Editor</h1>
